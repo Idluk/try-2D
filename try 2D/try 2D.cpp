@@ -4,10 +4,10 @@
 #include <cmath>
 
 using namespace std;
-
+const double M_PI = 3.14;
 const int HEIGHT = 40;
 const int WIDTH = 200;
-const int FPS = 144;
+const int FPS = 60;
 int screen[HEIGHT][WIDTH] = { 0 };
 
 char text_buffer[HEIGHT][WIDTH] = { 0 };
@@ -46,22 +46,47 @@ void clear() {
     for (int i = 0; i < HEIGHT; i++) {
         for (int j = 0; j < WIDTH; j++) {
             screen[i][j] = 0;
+            text_buffer[i][j] = 0;
         }
     }
 }
 
-void quad(int x, int y, int height, int width) {
-    for (int i = y; i < y + height; i++) {
-        for (int j = x; j < x + width; j++) {
-            if (j < 0 or i < 0 or j >= WIDTH or i >= HEIGHT) {
-                continue;
+void quad(int x, int y, int width, int height, double angle_deg = 0) {
+    if (angle_deg == 0) {
+        for (int i = y; i < y + height; i++) {
+            for (int j = x; j < x + width; j++) {
+                if (j >= 0 && i >= 0 && j < WIDTH && i < HEIGHT) {
+                    screen[i][j] = 1;
+                }
             }
-            else {
-                screen[i][j] = 1;
+        }
+    }
+    else {
+        double angle = angle_deg * M_PI / 180.0;
+        double cos_a = cos(angle);
+        double sin_a = sin(angle);
+        int cx = x + width / 2;
+        int cy = y + height / 2;
+        int half_w = width / 2;
+        int half_h = height / 2;
+
+        for (int i = -half_h; i <= half_h; i++) {
+            for (int j = -half_w; j <= half_w; j++) {
+                int x_rot = round(j * cos_a - i * sin_a);
+                int y_rot = round(j * sin_a + i * cos_a);
+                int screen_x = cx + x_rot;
+                int screen_y = cy + y_rot;
+
+                if (screen_x >= 0 && screen_x < WIDTH &&
+                    screen_y >= 0 && screen_y < HEIGHT) {
+                    screen[screen_y][screen_x] = 1;
+                }
             }
         }
     }
 }
+
+
 
 void circle(int x, int y, int d) {
     int r = d / 2;
@@ -81,16 +106,17 @@ void circle(int x, int y, int d) {
 
 int main()
 {
+    system("mode con cols=200 lines=41");
     long int time_screen = 0;
     long int time_sec = 0;
     long int time_rate = 0;
     bool f_sec, f_rate;
     long int rate = 2;
-    bool run = true;
-    int x, y;
     string text1 = "FPS:" + to_string(FPS);
+    int x, y;
     x = 10; y = 10;
-    while (run) { //экран 120 x 30
+    bool run = true;
+    while (run) { //экран 200 x 40
         time_screen++;
         time_sec = time_screen / FPS; // изменение раз в секунду
         time_rate = time_screen / rate; // изменение раз в определенный rate
@@ -98,20 +124,24 @@ int main()
         else f_sec = false;
         if (time_screen % rate == 0) f_rate = true;
         else f_rate = false;
-        COORD zero = { 0, 0 };
-        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), zero);
-
+        system("cls");
         //начало
-        draw_text(text1.c_str(), 0, 0);
-        if (f_rate){
-            if (time_sec % 28 < 14)
-                x += 1;
-            else x -= 1;
+        clear();
+        //draw_text(text1.c_str(), 0, 0); //fps
+
+        //тело программы
+        if (15 + time_rate*5 < 170) {
+            quad(15 + time_rate*5, 15, 10, 10, time_rate * 15);
         }
-        quad(x, y, 15, 15);        
+        else {
+            quad(170, 15, 10, 10, 45);
+        }
+        quad(180, 0, 20, 40);
+
+        //конец
         draw();
         Sleep(1000 / FPS);
-        clear();
+        
     }
 
 }
