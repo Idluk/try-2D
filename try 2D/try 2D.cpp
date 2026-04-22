@@ -51,58 +51,7 @@ void clear() {
     }
 }
 
-void quad(int x, int y, int width, int height, double angle_deg = 0) {
-    if (angle_deg == 0) {
-        for (int i = y; i < y + height; i++) {
-            for (int j = x; j < x + width; j++) {
-                if (j >= 0 && i >= 0 && j < WIDTH && i < HEIGHT) {
-                    screen[i][j] = 1;
-                }
-            }
-        }
-    }
-    else {
-        double angle = angle_deg * M_PI / 180.0;
-        double cos_a = cos(angle);
-        double sin_a = sin(angle);
-        int cx = x + width / 2;
-        int cy = y + height / 2;
-        int half_w = width / 2;
-        int half_h = height / 2;
-
-        for (int i = -half_h; i <= half_h; i++) {
-            for (int j = -half_w; j <= half_w; j++) {
-                int x_rot = round(j * cos_a - i * sin_a);
-                int y_rot = round(j * sin_a + i * cos_a);
-                int screen_x = cx + x_rot;
-                int screen_y = cy + y_rot;
-
-                if (screen_x >= 0 && screen_x < WIDTH &&
-                    screen_y >= 0 && screen_y < HEIGHT) {
-                    screen[screen_y][screen_x] = 1;
-                }
-            }
-        }
-    }
-}
-
-
-
-void circle(int x, int y, int d) {
-    int r = d / 2;
-    for (int i = y-r; i < y + r; i++) {
-        for (int j = x-r; j < x + r; j++) {
-            if (j < 0 or i < 0 or j >= WIDTH or i >= HEIGHT) {
-                continue;
-            }
-            if (pow(j-x,2) + pow(i-y, 2)*3 <= pow(r, 2)) {
-                screen[i][j] = 1;
-            }
-        }
-    }
-}
-
-void particles_quad(int x, int y, int width, int height, double angle_deg = 0, int visibility = 50) {
+void quad(int x, int y, int width, int height, double angle_deg = 0, int visibility = 100) {
     if (angle_deg == 0) {
         for (int i = y; i < y + height; i++) {
             for (int j = x; j < x + width; j++) {
@@ -138,7 +87,7 @@ void particles_quad(int x, int y, int width, int height, double angle_deg = 0, i
     }
 }
 
-void particles_circle(int x, int y, int d, int visibility = 50) {
+void circle(int x, int y, int d, int visibility = 100) {
     int r = d / 2;
     for (int i = y - r; i < y + r; i++) {
         for (int j = x - r; j < x + r; j++) {
@@ -187,7 +136,7 @@ int main()
         //тело программы
         
         for(int i = 0; i<200; i=i+30) {
-            particles_quad(i, HEIGHT / 2 - 10, 15, 15, 15 * time_rate + i, i/2 + 20);
+            quad(i, HEIGHT / 2 - 10, 15, 15, 15 * time_rate + i);
         }
 
         //конец
