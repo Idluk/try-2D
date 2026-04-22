@@ -1,5 +1,5 @@
 ﻿  try 2D.cpp
-C:\Users\BaxHu\source\repos\try 2D\try 2D\try 2D.cpp(75,31): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
 C:\Users\BaxHu\source\repos\try 2D\try 2D\try 2D.cpp(76,31): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
+C:\Users\BaxHu\source\repos\try 2D\try 2D\try 2D.cpp(77,31): warning C4244: инициализация: преобразование "double" в "int", возможна потеря данных
 C:\Users\BaxHu\source\repos\try 2D\try 2D\try 2D.cpp(164,15): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
   try 2D.vcxproj -> C:\Users\BaxHu\source\repos\try 2D\x64\Debug\try 2D.exe
