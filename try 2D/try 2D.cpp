@@ -7,7 +7,7 @@ using namespace std;
 const double M_PI = 3.14;
 const int HEIGHT = 40;
 const int WIDTH = 200;
-const int FPS = 60;
+const int FPS = 144;
 
 int screen[HEIGHT][WIDTH] = { 0 };
 char text_buffer[HEIGHT][WIDTH] = { 0 };
@@ -166,13 +166,12 @@ int main()
     int time_sec = 0;
     int time_rate = 0;
     bool f_sec, f_rate;
-    int rate = 10;
+    int rate = 5;
     int x, y;
     x = 10; y = 10;
     bool run = true;
     //переменные тела цикла
     Object obj;
-    string text1, text2;
     
     while (run) { //экран 200 x 40
         time_screen++;
@@ -185,24 +184,15 @@ int main()
         system("cls");
         //начало
         clear();
-        text1 = "Visibility:" + to_string(obj.visibility);
-        draw_text(text1.c_str(), 0, 0);
-        for (int n = 0; n < 1000; n++) {
-            if (n_layers[n])
-                text2 = "Layers:" + to_string(n);
-        }
-        draw_text(text2.c_str(), 0, 1);
         //тело программы
         if (f_rate) {
-            obj.x = 5 + time_rate*20 % 200 ; obj.y = 20; obj.width = 30; obj.height = 15;
+            obj.x = 5 + time_rate * 2 % 200; obj.y = 20; obj.width = 40; obj.height = 40; obj.angle_deg += time_rate;
             obj.quad();
         }
-        obj.visibility = time_rate*10 % 100;
+        obj.visibility = 40 + rand()%60;
 
         //конец
         draw();
         Sleep(1000 / FPS);
-        
     }
-
 }
