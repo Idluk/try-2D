@@ -7,19 +7,21 @@ using namespace std;
 const double M_PI = 3.14;
 const int HEIGHT = 40;
 const int WIDTH = 200;
-const int FPS = 144;
+const int FPS = 60;
 
 int screen[HEIGHT][WIDTH] = { 0 };
 char text_buffer[HEIGHT][WIDTH] = { 0 };
 int layers[1000][HEIGHT][WIDTH] = { 0 };
 bool n_layers[1000] = {0};
 
-struct Object {
+struct object {
     int x = 0, y = 0;
     int width = 0, height = 0, radius = 0;
     int angle_deg = 0, visibility = 100;
     int layer[HEIGHT][WIDTH] = { 0 };
     int slot = -1;
+    int rot_center_x = x;
+    int rot_center_y = y;
 
     void layer_to_draw() {
         if (slot == -1) {
@@ -48,17 +50,23 @@ struct Object {
         }
     }
 
+    void pixel() {
+        clear_layer();
+        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+            layer[y][x] = 1;
+        }
+        layer_to_draw();
+    }
+
     void quad() {
         clear_layer();
-        int half_w = width / 2;
-        int half_h = height / 2;
         if (angle_deg == 0) {
-            for (int i = -half_h; i < half_h; i++) {
-                for (int j = -half_w; j < half_w; j++) {
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
                     int screen_x = x + j;
                     int screen_y = y + i;
                     if (screen_x >= 0 && screen_y >= 0 && screen_x < WIDTH && screen_y < HEIGHT) {
-                        if (rand() % 100 > (100 - visibility))
+                        if (rand() % 100 + 1 > (100 - visibility))
                             layer[screen_y][screen_x] = 1;
                     }
                 }
@@ -68,19 +76,21 @@ struct Object {
             double angle = angle_deg * M_PI / 180.0;
             double cos_a = cos(angle);
             double sin_a = sin(angle);
-            int half_w = width / 2;
-            int half_h = height / 2;
+            
+            for (int i = 0; i <= height; i++) {
+                for (int j = 0; j <= width; j++) {
 
-            for (int i = -half_h; i <= half_h; i++) {
-                for (int j = -half_w; j <= half_w; j++) {
-                    int x_rot = round(j * cos_a - i * sin_a);
-                    int y_rot = round(j * sin_a + i * cos_a);
-                    int screen_x = x + x_rot;
-                    int screen_y = y + y_rot;
+                    int dx = (x + j) - rot_center_x;
+                    int dy = (y + i) - rot_center_y;
+                    int x_rot = round(dx * cos_a - dy * sin_a);
+                    int y_rot = round(dx * sin_a + dy * cos_a);
+
+                    int screen_x = rot_center_x + x_rot;
+                    int screen_y = rot_center_y + y_rot;
 
                     if (screen_x >= 0 && screen_x < WIDTH &&
                         screen_y >= 0 && screen_y < HEIGHT) {
-                        if (rand() % 100 > (100 - visibility))
+                        if (rand() % 100 + 1 > (100 - visibility))
                             layer[screen_y][screen_x] = 1;
                     }
                 }
@@ -91,14 +101,40 @@ struct Object {
 
     void circle() {
         clear_layer();
-        for (int i = y - radius; i < y + radius; i++) {
-            for (int j = x - radius; j < x + radius; j++) {
-                if (j < 0 or i < 0 or j >= WIDTH or i >= HEIGHT) {
-                    continue;
+        if (angle_deg == 0) {
+            for (int i = y - radius; i < y + radius; i++) {
+                for (int j = x - radius; j < x + radius; j++) {
+                    if (j < 0 or i < 0 or j >= WIDTH or i >= HEIGHT) {
+                        continue;
+                    }
+                    if (pow(j - x, 2) + pow(i - y, 2) * 3 <= pow(radius, 2)) {
+                        if (rand() % 100 + 1 > (100 - visibility))
+                            layer[i][j] = 1;
+                    }
                 }
-                if (pow(j - x, 2) + pow(i - y, 2)*3 <= pow(radius, 2)) {
-                    if (rand() % 100 > (100 - visibility))
-                        layer[i][j] = 1;
+            }
+        }
+        else {
+            double angle = angle_deg * M_PI / 180.0;
+            double cos_a = cos(angle);
+            double sin_a = sin(angle);
+            int dx = x - rot_center_x;
+            int dy = y - rot_center_y;
+
+            int rotated_center_x = rot_center_x + round(dx * cos_a - dy * sin_a);
+            int rotated_center_y = rot_center_y + round(dx * sin_a + dy * cos_a);
+            for (int i = -radius; i < radius; i++) {
+                for (int j = -radius; j < radius; j++) {
+                    if (j * j + i * i > radius*radius) continue;
+                    int screen_x = rotated_center_x + j;
+                    int screen_y = rotated_center_y + i;
+                    if (screen_x < 0 or screen_y < 0 or screen_x >= WIDTH or screen_y >= HEIGHT) {
+                        continue;
+                    }
+                    if (pow(j, 2) + pow(i, 2)*3 <= pow(radius, 2)) {
+                        if (rand() % 100 + 1 > (100 - visibility))
+                            layer[screen_y][screen_x] = 1;
+                    }
                 }
             }
         }
@@ -136,10 +172,10 @@ void draw() {
                 *ptr++ = text_buffer[i][j];
             }
             else if (screen[i][j]) {
-                *ptr++ = '*';
+                *ptr++ = '1';
             }
             else {
-                *ptr++ = ' ';
+                *ptr++ = '0';
             }
         }
         *ptr++ = '\n';
@@ -167,12 +203,14 @@ int main()
     int time_rate = 0;
     bool f_sec, f_rate;
     int rate = 5;
-    int x, y;
-    x = 10; y = 10;
     bool run = true;
     //переменные тела цикла
-    Object obj;
-    
+    object cir[3];
+    for (int i = 0; i < 3; i++)
+    {
+        cir[i] = { .x = 70*i, .y = 17, .radius = 15, .rot_center_x = 15, .rot_center_y = 15};
+    }
+
     while (run) { //экран 200 x 40
         time_screen++;
         time_sec = time_screen / FPS; // изменение раз в секунду
@@ -185,12 +223,17 @@ int main()
         //начало
         clear();
         //тело программы
-        if (f_rate) {
-            obj.x = 5 + time_rate * 2 % 200; obj.y = 20; obj.width = 40; obj.height = 40; obj.angle_deg += time_rate;
-            obj.quad();
+        for (int i = 0; i<1; i++)
+        {
+            if (cir[i].x == WIDTH) {
+                cir[i].x = 0;
+            }
+            cir[i].x += 5;
+            if (f_rate) {
+                cir[i].y = 17 + 10 * sin(time_rate*30);
+            }
+            cir[i].circle();
         }
-        obj.visibility = 40 + rand()%60;
-
         //конец
         draw();
         Sleep(1000 / FPS);
